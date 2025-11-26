@@ -9,7 +9,7 @@ def get_version():
         else:
             # For older python versions, we might need to fallback or just return a default
             # But project requires >= 3.11
-            return "0.1.0"
+            return "Unknown"
         
         # Assuming app/__main__.py is 2 levels deep from root (app/__main__.py)
         # But wait, __file__ is inside app package.
@@ -21,7 +21,7 @@ def get_version():
                 return data["project"]["version"]
     except Exception:
         pass
-    return "0.1.0"
+    return "Unknown"
 
 def main():
     parser = argparse.ArgumentParser(description="NonePyNCM CLI")

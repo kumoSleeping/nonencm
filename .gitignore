@@ -15,3 +15,5 @@ nonencm_config.yaml
 uv.lock
 session.pyncm
 nonencm.spec
+
+.DS_Store

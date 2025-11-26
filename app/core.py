@@ -239,7 +239,7 @@ class MusicManager:
             return f"{filename}.{ext}"
         except Exception:
             # Fallback
-            return f"{safe_artists} - {safe_title}.{ext}"
+            return f"{safe_title} - {safe_artists}.{ext}"
 
     def download_song(self, song_id: int, song_name: str, artist_name: str, output_dir: Optional[Path] = None):
         """Download a song by ID."""
@@ -252,7 +252,7 @@ class MusicManager:
             # Get configuration
             quality = config_manager.get("quality", "exhigh")
             preferred_format = config_manager.get("preferred_format", "auto")
-            template = config_manager.get("template", "{artist} - {title}")
+            template = config_manager.get("template", "{title} - {artist}")
             download_lrc = config_manager.get("download_lyrics", False)
             use_download_api = config_manager.get("use_download_api", False)
             overwrite = config_manager.get("overwrite", False)

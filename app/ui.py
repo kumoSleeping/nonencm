@@ -22,6 +22,7 @@ class UI:
                 ]
 
                 if not music_manager.is_logged_in:
+                    logger.warning("You are not logged in. The song download may be incomplete.")
                     choices.extend([
                         Choice("Login (QR Code) [Recommended]", "login_qr"),
                         Choice("Login (Phone)", "login_phone"),
@@ -85,7 +86,7 @@ class UI:
     def menu_search(self):
         while True:
             try:
-                keyword = InputPrompt("Enter song name or URL:").prompt()
+                keyword = InputPrompt("Enter song name or URL:").prompt().strip("'\"")
                 
                 type_, id_ = self.parse_url(keyword)
                 
@@ -188,7 +189,7 @@ class UI:
                 current_output = config_manager.get("output_dir", "downloads")
                 current_quality = config_manager.get("quality", "standard")
                 current_format = config_manager.get("preferred_format", "auto")
-                current_template = config_manager.get("template", "{artist} - {title}")
+                current_template = config_manager.get("template", "{title} - {artist}")
                 current_lyrics = config_manager.get("download_lyrics", False)
                 
                 current_use_api = config_manager.get("use_download_api", False)
@@ -198,7 +199,7 @@ class UI:
                     Choice(f"Output Directory: {current_output}", "output"),
                     Choice(f"Audio Quality: {current_quality}", "quality"),
                     Choice(f"Preferred Format: {current_format}", "format"),
-                    Choice("Filename Template", "template"),
+                    Choice(f"Filename Template: {current_template}", "template"),
                     Choice(f"Download Lyrics: {'Yes' if current_lyrics else 'No'}", "lyrics"),
                     Choice(f"Use Download API: {'Yes' if current_use_api else 'No'}", "use_api"),
                     Choice(f"Overwrite Files: {'Yes' if current_overwrite else 'No'}", "overwrite"),
@@ -214,6 +215,7 @@ class UI:
                     try:
                         new_output = InputPrompt(f"Enter new output directory (current: {current_output}):").prompt()
                         if new_output:
+                            new_output = new_output.strip("'\"")
                             config_manager.set("output_dir", new_output)
                     except CancelledError:
                         pass
