@@ -9,7 +9,7 @@
 
 ## 📖 简介
 
-**[pyncm](https://github.com/greats3an/pyncm)** 是一个功能强大的网易云音乐工具箱，专注于 NCM 格式文件的解密与转换，同时提供完善的元数据管理功能。
+**[pyncm](https://github.com/greats3an/pyncm)** 是一个功能强大的 `ncm` 处理工具。
 
 本项目基于 **pyncm** 与 **noneprompt** 构建的现代化 CLI 界面，提供更便捷的使用体验。
 
@@ -37,7 +37,7 @@ nonencm
     ./nonencm-macos-vX.X.X
     ```
 
-> 使用前请先登录网易云音乐账号
+> 使用前请先登录
 
 ## 📄 许可证
 
