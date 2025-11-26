@@ -1,5 +1,6 @@
 import time
 import re
+from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from noneprompt import ListPrompt, Choice, InputPrompt, CancelledError
 from .core import music_manager
@@ -8,6 +9,12 @@ from .utils import logger, save_qr_and_open
 
 class UI:
     def run(self):
+        output_dir = Path(config_manager.get('output_dir', 'downloads')).absolute()
+        logger.success(f"Download Directory: {output_dir}")
+        logger.info("Press <Ctrl+C> to go back or cancel operations.")
+        from .__main__ import get_version
+        logger.success(f"nonencm v{get_version()}")
+        
         while True:
             try:
                 choices = [
@@ -16,8 +23,8 @@ class UI:
 
                 if not music_manager.is_logged_in:
                     choices.extend([
+                        Choice("Login (QR Code) [Recommended]", "login_qr"),
                         Choice("Login (Phone)", "login_phone"),
-                        Choice("Login (QR Code)", "login_qr"),
                         Choice("Login (Anonymous)", "login_anon"),
                     ])
                 else:

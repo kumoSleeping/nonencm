@@ -16,7 +16,7 @@ class ConfigManager:
             try:
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     self.config = yaml.safe_load(f) or {}
-                logger.info(f"Loaded configuration from {self.config_path}")
+                logger.success(f"Loaded configuration from {self.config_path}")
             except Exception as e:
                 logger.error(f"Failed to load config: {e}")
                 self.config = {}
@@ -49,15 +49,21 @@ class ConfigManager:
     def ensure_config(self):
         """Ensure essential configuration exists, prompt user if not."""
         try:
+            changed = False
             # Check if session file exists, if so, skip login config
             if Path("session.pyncm").exists():
                 pass
             
             if not self.get("output_dir"):
-                self.set("output_dir", "downloads")
+                self.config["output_dir"] = "downloads"
+                changed = True
             
             if not self.get("preferred_format"):
-                self.set("preferred_format", "auto")
+                self.config["preferred_format"] = "auto"
+                changed = True
+                
+            if changed:
+                self.save_config()
         except CancelledError:
             logger.warning("Configuration cancelled.")
         except Exception as e:

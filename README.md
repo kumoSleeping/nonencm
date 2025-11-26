@@ -1,13 +1,11 @@
+
+
+
 # Nonencm
 
-<div align="center">
-
-**网易云音乐 NCM 格式转换与管理工具**
 
 [![PyPI](https://img.shields.io/pypi/v/nonencm?style=flat-square)](https://pypi.org/project/nonencm/)
 [![License](https://img.shields.io/github/license/taurusxin/ncmdump?style=flat-square)](LICENSE)
-
-</div>
 
 ## 📖 简介
 
@@ -29,9 +27,8 @@ nonencm
 
 ### 方式二：下载可执行文件
 
-对于没有 Python 环境的用户，可以在 [Releases](../../releases) 页面下载对应系统的可执行文件。
+对于没有 Python 环境的用户，可以在 [Releases](../../releases) 页面下载对应系统的可执行文件。Windows 用户下载后直接双击即可。
 
-Windows 用户下载后直接双击即可。
 在终端中运行方法:
 - Windows: `win` + `r`，输入 `cmd`，回撤出现黑窗口，拖入 `.exe` 文件，回车运行
 - macOS: `open nonencm-macos-vX.X.X`，打开访达找到所在文件夹，右键底部文件夹，选择 `在终端中打开` 输入
@@ -39,6 +36,8 @@ Windows 用户下载后直接双击即可。
     chmod + x nonencm-macos-vX.X.X
     ./nonencm-macos-vX.X.X
     ```
+
+> 使用前请先登录网易云音乐账号
 
 ## 📄 许可证
 

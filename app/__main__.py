@@ -34,12 +34,12 @@ def main():
         print(get_version())
         return
 
+    from .utils import init_log
+    init_log()
+
     from .config import config_manager
     from .ui import ui
-    from .utils import logger, init_log
-
-    init_log()
-    logger.info("Starting nonepyncm...")
+    from .utils import logger
     
     # Apply runtime config
     if args.no_overwrite:
