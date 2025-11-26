@@ -1,0 +1,30 @@
+[project]
+name = "nonencm"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "loguru>=0.7.3",
+    "mutagen>=1.47.0",
+    "noneprompt>=0.1.10",
+    "pyncm>=1.8.1",
+    "pyyaml>=6.0.3",
+    "segno>=1.6.6",
+]
+
+[project.scripts]
+nonencm = "app.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+build = [
+    "pyinstaller>=6.0.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["old*", "logs*"]

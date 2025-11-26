@@ -1,0 +1,202 @@
+name: Build and Release Multi-Platform on Version Change
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/__main__.py'
+
+env:
+  APP_NAME: nonencm
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.get_version.outputs.version_str }}
+      output_name: ${{ steps.get_version.outputs.output_name_str }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install .
+      shell: pwsh
+
+    - name: Extract version from __main__.py
+      id: get_version
+      run: |
+        $extracted_version = python run.py -v
+        if (-not $extracted_version) {
+          Write-Error "Failed to extract version from python run.py -v"
+          exit 1
+        }
+        $output_file_name = "${{ env.APP_NAME }}-windows-v$extracted_version"
+        
+        echo "VERSION=$extracted_version" >> $env:GITHUB_ENV
+        echo "OUTPUT_NAME=$output_file_name" >> $env:GITHUB_ENV
+        
+        echo "version_str=$extracted_version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        echo "output_name_str=$output_file_name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+        Write-Host "Extracted Version: $extracted_version"
+        Write-Host "Set OUTPUT_NAME to: $output_file_name"
+      shell: pwsh
+
+    - name: Verify Environment Variables
+      run: |
+        Write-Host "VERSION is: ${{ env.VERSION }}"
+        Write-Host "OUTPUT_NAME is: ${{ env.OUTPUT_NAME }}"
+        if (-not $env:OUTPUT_NAME) {
+          Write-Error "OUTPUT_NAME environment variable is not set or is empty after extraction!"
+          exit 1
+        }
+      shell: pwsh
+
+    - name: Build Windows EXE
+      run: |
+        pyinstaller --onefile --name "${{ env.OUTPUT_NAME }}" --hidden-import noneprompt --hidden-import mutagen --hidden-import yaml --hidden-import loguru --hidden-import pyncm --hidden-import segno --add-data "app;app" run.py
+      shell: pwsh
+
+    - name: Upload Windows Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-executable-${{ steps.get_version.outputs.version_str }}
+        path: dist/${{ steps.get_version.outputs.output_name_str }}.exe
+
+  build-macos:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.get_version.outputs.version_str }}
+      output_name: ${{ steps.get_version.outputs.output_name_str }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install .
+
+    - name: Extract version from __main__.py
+      id: get_version
+      run: |
+        EXTRACTED_VERSION=$(python run.py -v)
+        if [ -z "$EXTRACTED_VERSION" ]; then
+          echo "::error::Failed to extract version from python run.py -v"
+          exit 1
+        fi
+        OUTPUT_FILE_NAME="${{ env.APP_NAME }}-macos-v$EXTRACTED_VERSION"
+        
+        echo "VERSION=$EXTRACTED_VERSION" >> $GITHUB_ENV
+        echo "OUTPUT_NAME=$OUTPUT_FILE_NAME" >> $GITHUB_ENV
+        
+        echo "version_str=$EXTRACTED_VERSION" >> $GITHUB_OUTPUT
+        echo "output_name_str=$OUTPUT_FILE_NAME" >> $GITHUB_OUTPUT
+        
+        echo "Extracted Version: $EXTRACTED_VERSION"
+        echo "Set OUTPUT_NAME to: $OUTPUT_FILE_NAME"
+
+    - name: Verify Environment Variables
+      run: |
+        echo "VERSION is: ${{ env.VERSION }}"
+        echo "OUTPUT_NAME is: ${{ env.OUTPUT_NAME }}"
+        if [ -z "${{ env.OUTPUT_NAME }}" ]; then
+            echo "::error::OUTPUT_NAME environment variable is not set or is empty after extraction!"
+            exit 1
+        fi
+
+    - name: Build macOS App
+      run: |
+        pyinstaller --onefile --name "${{ env.OUTPUT_NAME }}" --hidden-import noneprompt --hidden-import mutagen --hidden-import yaml --hidden-import loguru --hidden-import pyncm --hidden-import segno --add-data="app:app" run.py
+        chmod +x dist/"${{ env.OUTPUT_NAME }}"
+
+    - name: Upload macOS Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-executable-${{ steps.get_version.outputs.version_str }}
+        path: dist/${{ steps.get_version.outputs.output_name_str }}
+
+  create-release:
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Define Release Variables
+      id: release_vars
+      run: |
+        echo "RELEASE_VERSION=${{ needs.build-windows.outputs.version }}"
+        
+        WINDOWS_FILENAME="${{ needs.build-windows.outputs.output_name }}.exe"
+        MACOS_FILENAME="${{ needs.build-macos.outputs.output_name }}"
+        
+        echo "WINDOWS_FILENAME_ENV=$WINDOWS_FILENAME" >> $GITHUB_ENV
+        echo "MACOS_FILENAME_ENV=$MACOS_FILENAME" >> $GITHUB_ENV
+        
+        echo "final_windows_filename=$WINDOWS_FILENAME" >> $GITHUB_OUTPUT
+        echo "final_macos_filename=$MACOS_FILENAME" >> $GITHUB_OUTPUT
+
+    - name: Download Windows Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-executable-${{ needs.build-windows.outputs.version }}
+        path: artifacts
+
+    - name: Download macOS Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: macos-executable-${{ needs.build-macos.outputs.version }}
+        path: artifacts
+
+    - name: Verify Downloaded Artifacts
+      run: |
+        ls -l artifacts/
+        if [ ! -f "artifacts/${{ steps.release_vars.outputs.final_windows_filename }}" ]; then
+          echo "::error::Windows artifact not found!"
+          exit 1
+        fi
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ needs.build-windows.outputs.version }}
+        name: Release v${{ needs.build-windows.outputs.version }}
+        body: |
+          Automated release for version ${{ needs.build-windows.outputs.version }}.
+
+          **Downloads:**
+          * Windows: `${{ steps.release_vars.outputs.final_windows_filename }}`
+          * macOS: `${{ steps.release_vars.outputs.final_macos_filename }}`
+        draft: false
+        prerelease: false
+        files: |
+          artifacts/${{ steps.release_vars.outputs.final_windows_filename }}
+          artifacts/${{ steps.release_vars.outputs.final_macos_filename }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
