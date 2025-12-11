@@ -45,11 +45,13 @@ nonencm
     ./nonencm-macos-vX.X.X
     ```
 
-## 使用前必做
+## 使用前须知
 
 1. 请先登录，并保证账号拥有一定的权限, 确保你能完整收听歌曲
 2. Settings 设置你的下载文件夹
 3. Settings 设置你的音频 Quality
+
+**返回上一级/取消等操作, 请使用 `ctrl + c` 或 `cmd + c`(Mac)**
 
 ## 功能一览
 
