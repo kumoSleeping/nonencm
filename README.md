@@ -29,7 +29,7 @@ nonencm
 如果你希望使用目标文件夹的图片报表功能, 需要安装 pil-utils 依赖:
 
 ```bash
-pip install nonencm[pil-utils]
+pip install "nonencm[pil-utils]"
 nonencm
 ```
 
