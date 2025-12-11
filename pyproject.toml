@@ -1,17 +1,17 @@
 [project]
 name = "nonencm"
-version = "0.2.0"
+version = "0.2.1"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "loguru>=0.7.3",
-    "mutagen>=1.47.0",
-    "noneprompt>=0.1.10",
-    "pillow>=12.0.0",
+    "loguru",
+    "mutagen",
+    "noneprompt",
+    "pillow",
     "pyncm>=1.8.1",
-    "pyyaml>=6.0.3",
-    "segno>=1.6.6",
+    "pyyaml",
+    "segno",
 ]
 
 [project.scripts]
