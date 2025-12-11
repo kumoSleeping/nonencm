@@ -1,6 +1,6 @@
 [project]
 name = "nonencm"
-version = "0.1.2"
+version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -8,6 +8,7 @@ dependencies = [
     "loguru>=0.7.3",
     "mutagen>=1.47.0",
     "noneprompt>=0.1.10",
+    "pillow>=12.0.0",
     "pyncm>=1.8.1",
     "pyyaml>=6.0.3",
     "segno>=1.6.6",
@@ -23,6 +24,10 @@ build-backend = "setuptools.build_meta"
 [project.optional-dependencies]
 build = [
     "pyinstaller>=6.0.0",
+]
+pil-utils = [
+    "pil-utils>=0.2.0",
+    "typing_extensions>=4.8.0",
 ]
 
 [tool.setuptools.packages.find]
