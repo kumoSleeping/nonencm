@@ -10,8 +10,9 @@
 ## 📖 简介
 
 **[pyncm](https://github.com/greats3an/pyncm)** 是一个功能强大的 `ncm` 处理工具。
+**[QQMusicApi](https://github.com/L-1124/QQMusicApi)** 是一个功能强大的 异步 API 库。
 
-本项目基于 **pyncm** 与 **noneprompt** 构建的现代化 CLI 界面，提供更便捷的使用体验。
+本项目基于 **pyncm** + **QQMusicApi** 与 **noneprompt** 构建的现代化 CLI 界面，提供更便捷的使用体验。
 
 本项目仅用于学习研究封装与工具开发经验, 不提供任何服务.  
 
