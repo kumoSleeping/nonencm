@@ -41,3 +41,19 @@ def save_qr_and_open(url: str, filename: str = "login_qr.png"):
     except Exception as e:
         logger.error(f"Failed to save QR: {e}")
         return None
+
+def save_raw_qr(data: bytes, filename: str = "login_qr.png"):
+    """Save raw QR image bytes to file and open it (used for QQ QR login)."""
+    try:
+        path = Path(filename)
+        path.write_bytes(data)
+        open_folder(path.parent)
+        if sys.platform == 'darwin':
+            subprocess.run(['open', str(path)])
+        elif os.name == 'nt':
+            os.startfile(str(path))
+        print(f"\nQR Code saved to: {path.absolute()}\n")
+        return path
+    except Exception as e:
+        logger.error(f"Failed to save QR: {e}")
+        return None

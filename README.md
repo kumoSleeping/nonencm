@@ -11,10 +11,11 @@
 
 **[pyncm](https://github.com/greats3an/pyncm)** 是一个功能强大的 `ncm` 处理工具。
 **[QQMusicApi](https://github.com/L-1124/QQMusicApi)** 是一个功能强大的 异步 API 库。
+**[noneprompt](https://github.com/nonebot/noneprompt)** 是 NoneBot 设计的控制台交互的提示工具包。
 
-本项目基于 **pyncm** + **QQMusicApi** 与 **noneprompt** 构建的现代化 CLI 界面，提供更便捷的使用体验。
+> ~~本项目实际上就是把这三个东西 vibe 在一起.~~
 
-本项目仅用于学习研究封装与工具开发经验, 不提供任何服务.  
+另外, 本项目仅用于学习研究封装与工具开发经验, 不提供任何支持.  
 
 ## 🚀 安装与使用
 
@@ -48,9 +49,11 @@ nonencm
 
 ## 使用前须知
 
-1. 请先登录，并保证账号拥有一定的权限, 确保你能完整收听歌曲
-2. Settings 设置你的下载文件夹
-3. Settings 设置你的音频 Quality
+1. 请先登录
+   1. N 推荐使用二维码登录
+   2. Q 推荐使用二维码登录
+   3. ~~因为我别的都没测~~
+2. 输出目录共用，Detection / Export 会对目录内所有歌曲生效（无论来源于 N 还是 Q）。
 
 **返回上一级/取消等操作, 请使用 `ctrl + c` 或 `cmd + c`(Mac)**
 
@@ -58,9 +61,19 @@ nonencm
 
 
 ### Settings
-> 全局设置
+> 通用设置
 - Output Directory
   - 选择下载文件的保存位置
+- Filename Template: {title} - {artist}
+  - {title}：歌曲名
+  - {artist}/{artists}：歌手（多个时逗号分隔）
+  - {album}：专辑名
+  - {track}：同 {title}（保留的兼容键）
+  - {id}：歌曲 ID
+- Overwrite Files: No / Yes
+  - 如果已经存在是否覆盖
+
+> N Settings（二级菜单）
 - Audio Quality: standard
   - Standard (standard) 默认
   - Higher (exhigh)
@@ -70,29 +83,29 @@ nonencm
   - auto：由接口返回的最佳可用格式决定(在较低的 Audio Quality 情况下通常是 mp3)
   - mp3：即便有高码率/无损也会强制转为 mp3 级别的下载。
   - flac：会优先无损格式，不足时再退回其他格式。
-- Filename Template: {title} - {artist}
-  - {title}：歌曲名
-  - {artist}/{artists}：歌手（多个时逗号分隔）
-  - {album}：专辑名
-  - {track}：同 {title}（保留的兼容键）
-  - {id}：歌曲 ID
 - Download Lyrics: No
   - 下载同时附带歌词
 - Use Download API: No / Yes
   - 网易云黑胶用户拥有每个月300-500次的下载机会
   - 否则使用播放Api进行下载，可能会有部分音质受限的情况
-- Overwrite Files: No / Yes
-  - 如果已经存在是否覆盖
+
+> Q Settings（二级菜单）
+- Preferred File Type
+  - mp3_320：高码率 mp3
+  - mp3_128：标准 mp3
+  - flac：无损 flac（可用时）
+
+### Login
+> 平台独立登录
+- N Account：二维码 / 手机号 / 匿名登录，支持注销，登录后生成 `session.pyncm`
+- Q Account：二维码（QQ / WX）或短信验证码登录，支持注销，登录后生成 `session.qqmusic.json`
+- 未登录的平台不会显示对应的搜索入口
 
 ### Search & Download
->批量下载歌曲歌单
 
-- 支持直接传入歌单链接下载
-- 支持直接搜索歌曲下载
-- 支持批量搜索歌曲下载
-  - 使用换行分隔
-  - 每次将请您手动确认搜索结果, 确认后将静默下载, 您可以立即确认下一首歌的选择
-- 会根据下载策略进行残破文件(需vip/登陆)的检测和二次下载确认
+- 支持直接传入歌单链接下载（N: 网易云；Q: QQ）
+- 支持单行或多行关键字搜索并下载（换行分隔；逐首确认后静默下载，可继续下一首）
+- 下载后复用通用的检测/导出能力（含残破文件检测，需登录/VIP 时触发）
 
 ### Export
 > 导出目标文件夹的歌单报表
@@ -110,13 +123,10 @@ nonencm
 - Check Possible Duplicates
   - 对目标文件夹进行匹配、检测可能的重复文件并让用户选择
 
-### 基本支持
-- 登陆
-- 下载自动补全封面信息
 
 ## 配置文件
 - 本项目会在启动的文件夹生成 nonencm_config.yaml 文件, 用于保存全局配置
-- 登录后, pyncm 会在启动的文件夹生成 session.pyncm 文件, 用于保存登录状态
+- 登录后, N 会生成 session.pyncm，Q 会生成 session.qqmusic.json，用于保存登录状态
 
 ## 📄 许可证
 额别急我研究一下。

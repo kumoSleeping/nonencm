@@ -1,6 +1,6 @@
 [project]
 name = "nonencm"
-version = "0.2.1"
+version = "0.2.2"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -11,6 +11,7 @@ dependencies = [
     "pillow",
     "pyncm>=1.8.1",
     "pyyaml",
+    "qqmusic-api-python>=0.3.6",
     "segno",
 ]
 

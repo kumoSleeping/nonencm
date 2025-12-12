@@ -61,6 +61,10 @@ class ConfigManager:
             if not self.get("preferred_format"):
                 self.config["preferred_format"] = "auto"
                 changed = True
+            
+            if not self.get("qq_file_type"):
+                self.config["qq_file_type"] = "mp3_320"
+                changed = True
                 
             if changed:
                 self.save_config()
