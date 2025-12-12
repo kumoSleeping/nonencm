@@ -98,12 +98,12 @@ nonencm
 ### Login
 > 平台独立登录
 - N Account：二维码 / 手机号 / 匿名登录，支持注销，登录后生成 `session.pyncm`
-- Q Account：二维码（QQ / WX）或短信验证码登录，支持注销，登录后生成 `session.qqmusic.json`
+- Q Account：二维码（Q / W）或短信验证码登录，支持注销，登录后生成 `session.qqmusic.json`
 - 未登录的平台不会显示对应的搜索入口
 
 ### Search & Download
 
-- 支持直接传入歌单链接下载（N: 网易云；Q: QQ）
+- 支持直接传入歌单链接下载（N / Q）
 - 支持单行或多行关键字搜索并下载（换行分隔；逐首确认后静默下载，可继续下一首）
 - 下载后复用通用的检测/导出能力（含残破文件检测，需登录/VIP 时触发）
 
