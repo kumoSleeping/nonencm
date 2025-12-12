@@ -249,6 +249,40 @@ class UI:
         selected_song = ListPrompt(title, song_choices).prompt()
         return selected_song.data
 
+    def _start_download_qq(self, song, background: bool = False, force_overwrite: bool = None):
+        artists = ", ".join(song.get("singers") or [])
+        if background:
+            t = threading.Thread(
+                target=qq_music_manager.download_song,
+                args=(
+                    song["mid"],
+                    song.get("title") or "",
+                    artists,
+                ),
+                kwargs={
+                    "album": song.get("album") or "",
+                    "album_mid": song.get("album_mid") or "",
+                    "media_mid": song.get("media_mid") or "",
+                    "vs": song.get("vs") or [],
+                    "force_overwrite": force_overwrite,
+                    "quiet": True,
+                },
+                daemon=True,
+            )
+            t.start()
+            return t
+        else:
+            return qq_music_manager.download_song(
+                song["mid"],
+                song.get("title") or "",
+                artists,
+                album=song.get("album") or "",
+                album_mid=song.get("album_mid") or "",
+                media_mid=song.get("media_mid") or "",
+                vs=song.get("vs") or [],
+                force_overwrite=force_overwrite,
+            )
+
     def _parse_qq_playlist(self, text: str):
         if "qq.com" not in text:
             return None
@@ -289,7 +323,7 @@ class UI:
                 return params[key][0]
         return None
 
-    def _handle_single_keyword_qq(self, keyword: str, back_label: str = "Back", force_overwrite: bool = None):
+    def _handle_single_keyword_qq(self, keyword: str, back_label: str = "Back", force_overwrite: bool = None, background: bool = False):
         # Playlist URL support
         playlist_id = self._parse_qq_playlist(keyword)
         if playlist_id:
@@ -302,14 +336,16 @@ class UI:
             try:
                 for t in tracks:
                     artists = ", ".join(t.get("singers") or [])
-                    qq_music_manager.download_song(
-                        t["mid"],
-                        t.get("title") or "",
-                        artists,
-                        album=t.get("album") or "",
-                        album_mid=t.get("album_mid") or "",
-                        force_overwrite=force_overwrite,
-                    )
+                qq_music_manager.download_song(
+                    t["mid"],
+                    t.get("title") or "",
+                    artists,
+                    album=t.get("album") or "",
+                    album_mid=t.get("album_mid") or "",
+                    media_mid=t.get("media_mid") or "",
+                    vs=t.get("vs") or [],
+                    force_overwrite=force_overwrite,
+                )
                 self._auto_check_failed()
             except CancelledError:
                 logger.info("Playlist download cancelled. Returning to previous menu.")
@@ -325,17 +361,9 @@ class UI:
             if not detail:
                 logger.error("Failed to fetch song detail.")
                 return
-            artists = ", ".join(detail.get("singers") or [])
-            filepath = qq_music_manager.download_song(
-                detail["mid"],
-                detail.get("title") or "",
-                artists,
-                album=detail.get("album") or "",
-                album_mid=detail.get("album_mid") or "",
-                force_overwrite=force_overwrite,
-            )
-            if filepath:
-                self._auto_check_failed(files=[filepath])
+            t = self._start_download_qq(detail, background=background, force_overwrite=force_overwrite)
+            if not background and t:
+                self._auto_check_failed(files=[t] if isinstance(t, (str, Path)) else None)
             return
 
         songs = qq_music_manager.search(keyword)
@@ -348,28 +376,32 @@ class UI:
             return
 
         artists = ", ".join(song.get("singers") or [])
-        filepath = qq_music_manager.download_song(
-            song["mid"],
-            song.get("title") or "",
-            artists,
-            album=song.get("album") or "",
-            album_mid=song.get("album_mid") or "",
+        result = self._start_download_qq(
+            song,
+            background=background,
             force_overwrite=force_overwrite,
         )
-        if filepath:
-            self._auto_check_failed(files=[filepath])
-        return filepath
+        if not background and result:
+            self._auto_check_failed(files=[result] if isinstance(result, Path) else None)
+        return result
 
     def _handle_batch_keywords_qq(self, keywords):
         total = len(keywords)
         logger.info(f"Detected multiple lines ({total}). Processing QQ batch search...")
+        threads = []
         for idx, keyword in enumerate(keywords, 1):
             try:
                 logger.info(f"[{idx}/{total}] Searching for: {keyword}")
-                self._handle_single_keyword_qq(keyword, back_label="Skip")
+                result = self._handle_single_keyword_qq(keyword, back_label="Skip", force_overwrite=None, background=True)
+                if isinstance(result, threading.Thread):
+                    threads.append(result)
             except CancelledError:
                 logger.warning("Batch search cancelled by user. Returning to previous menu.")
                 return
+        for t in threads:
+            t.join()
+        if threads:
+            self._auto_check_failed()
 
     def _format_fail_reason(self, info: dict) -> str:
         reasons = []

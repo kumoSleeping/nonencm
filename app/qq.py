@@ -269,6 +269,8 @@ class QQMusicManager:
             if isinstance(album_info, dict):
                 album = album_info.get("name") or album_info.get("title") or ""
                 album_mid = album_info.get("mid") or (album_info.get("pmid") or "").split("_")[0] or None
+            media_mid = (song.get("file") or {}).get("media_mid") or mid
+            vs = song.get("vs") or []
             results.append(
                 {
                     "mid": mid,
@@ -276,6 +278,8 @@ class QQMusicManager:
                     "singers": singers,
                     "album": album,
                     "album_mid": album_mid,
+                    "media_mid": media_mid,
+                    "vs": vs,
                     "raw": song,
                 }
             )
@@ -302,6 +306,8 @@ class QQMusicManager:
             if isinstance(album_info, dict):
                 album = album_info.get("name") or album_info.get("title") or ""
                 album_mid = album_info.get("mid") or (album_info.get("pmid") or "").split("_")[0] or None
+            media_mid = (track.get("file") or {}).get("media_mid") or mid
+            vs = track.get("vs") or []
             results.append(
                 {
                     "mid": str(mid),
@@ -309,6 +315,8 @@ class QQMusicManager:
                     "singers": singers,
                     "album": album,
                     "album_mid": album_mid,
+                    "media_mid": media_mid,
+                    "vs": vs,
                 }
             )
         return results
@@ -328,12 +336,16 @@ class QQMusicManager:
         album_info = info.get("album") or {}
         album = album_info.get("name") or album_info.get("title") or ""
         album_mid = album_info.get("mid") or (album_info.get("pmid") or "").split("_")[0] or ""
+        media_mid = (info.get("file") or {}).get("media_mid") or song_mid
+        vs = info.get("vs") or []
         return {
             "mid": song_mid,
             "title": title,
             "singers": singers,
             "album": album,
             "album_mid": album_mid,
+            "media_mid": media_mid,
+            "vs": vs,
         }
 
     def _qq_file_type(self):
@@ -353,6 +365,8 @@ class QQMusicManager:
         artists: str,
         album: str = "",
         album_mid: str = "",
+        media_mid: str = "",
+        vs: Optional[List[str]] = None,
         *,
         quiet: bool = False,
         force_overwrite: Optional[bool] = None,
@@ -385,12 +399,32 @@ class QQMusicManager:
             return filepath
 
         try:
-            url_map = self._run_async(
-                qq_song.get_song_urls([song_mid], file_type=file_type, credential=self._credential)
-            )
-            url = url_map.get(song_mid)
-            if isinstance(url, tuple):
-                url = url[0]
+            vs_list = vs or []
+            media = media_mid or song_mid
+            candidates = [song_mid, media] + vs_list
+
+            url = self._get_download_url(candidates, file_type, vs_list)
+
+            # Fallback: fetch detail if missing URLs
+            if not url:
+                detail = self.get_song_detail(song_mid)
+                if detail:
+                    media = detail.get("media_mid") or media
+                    vs_list = detail.get("vs") or vs_list
+                    if not album_mid:
+                        album_mid = detail.get("album_mid") or album_mid
+                    # Enrich tags if missing
+                    if not album:
+                        album = detail.get("album") or album
+                        song_info["al"]["name"] = album
+                    if not artists:
+                        artists = ", ".join(detail.get("singers") or [])
+                        song_info["ar"] = [{"name": a.strip()} for a in artists.split(",") if a.strip()]
+                    if detail.get("title"):
+                        song_info["name"] = detail["title"]
+                    candidates = [song_mid, media] + vs_list
+                    url = self._get_download_url(candidates, file_type, vs_list)
+
             if not url:
                 log_error("No download URL returned.")
                 return None
@@ -412,6 +446,63 @@ class QQMusicManager:
         except Exception as e:
             log_error(f"Failed to download {song_name}: {e}")
             return None
+
+    def _get_download_url(
+        self,
+        mids: List[str],
+        file_type: qq_song.SongFileType,
+        vs: List[str],
+    ) -> Optional[str]:
+        """Get download URL with fallbacks across multiple mids."""
+        candidates = []
+        seen = set()
+        for m in mids:
+            if m and m not in seen:
+                candidates.append(m)
+                seen.add(m)
+
+        # Preferred quality
+        for mid in candidates:
+            try:
+                url_map = self._run_async(
+                    qq_song.get_song_urls([mid], file_type=file_type, credential=self._credential)
+                )
+                url = url_map.get(mid)
+                if isinstance(url, tuple):
+                    url = url[0]
+                if url:
+                    return url
+            except Exception as e:
+                logger.error(f"Primary download URL fetch failed for {mid}: {e}")
+
+        # Fallback to MP3_128
+        if file_type != qq_song.SongFileType.MP3_128:
+            for mid in candidates:
+                try:
+                    url_map = self._run_async(
+                        qq_song.get_song_urls([mid], file_type=qq_song.SongFileType.MP3_128, credential=self._credential)
+                    )
+                    url = url_map.get(mid)
+                    if isinstance(url, tuple):
+                        url = url[0]
+                    if url:
+                        return url
+                except Exception as e:
+                    logger.error(f"MP3_128 fallback failed for {mid}: {e}")
+
+        # Try preview URL as last resort
+        if candidates:
+            try:
+                # Use provided vs first; otherwise fall back to empty string
+                vs_val = vs[0] if vs else ""
+                url = self._run_async(qq_song.get_try_url(candidates[0], vs_val))
+                if isinstance(url, dict):
+                    url = next(iter(url.values()), "")
+                return url or None
+            except Exception as e:
+                logger.error(f"Preview URL fetch failed: {e}")
+
+        return None
 
     def _fetch_cover(self, client: httpx.Client, album_mid: Optional[str]) -> Optional[bytes]:
         """Fetch album cover using album mid if available."""
