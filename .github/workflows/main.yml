@@ -5,7 +5,9 @@ on:
     branches:
       - main
     paths:
-      - 'app/__main__.py'
+      - 'app/**'
+      - 'run.py'
+      - 'pyproject.toml'
 
 env:
   APP_NAME: nonencm
